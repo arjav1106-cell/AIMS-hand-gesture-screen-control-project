@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gesture Control - Focus Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="focus-style.css">
+</head>
+<body class="focus-active">
+
+<header class="navbar">
+  <div class="logo">🖐 GestureControl</div>
+
+  <div class="status">
+    <span>System Status:</span>
+    <span class="status-dot inactive" id="statusDot"></span>
+    <svg class="status-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <div class="theme-switch" id="themeToggle">
+    <div class="switch-track">
+      <div class="switch-thumb">
+        <span class="switch-icon">🌙</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar collapsed">
+
+    <!-- Buttons -->
+    <button class="nav-btn">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <polygon points="8,5 19,12 8,19"></polygon>
+        </svg>
+      </span>
+    </button>
+
+    <button class="nav-btn">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <rect x="6" y="6" width="12" height="12"></rect>
+        </svg>
+      </span>
+    </button>
+
+    <button class="nav-btn">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <line x1="8" y1="6" x2="20" y2="6"></line>
+          <line x1="8" y1="12" x2="20" y2="12"></line>
+          <line x1="8" y1="18" x2="20" y2="18"></line>
+          <circle cx="4" cy="6" r="1.5"></circle>
+          <circle cx="4" cy="12" r="1.5"></circle>
+          <circle cx="4" cy="18" r="1.5"></circle>
+        </svg>
+      </span>
+    </button>
+
+    <button class="nav-btn">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M16.9 16.9l2.1 2.1M2 12h3M19 12h3M4.9 19.1l2.1-2.1M16.9 7.1l2.1-2.1"></path>
+        </svg>
+      </span>
+    </button>
+
+    <!-- Focus -->
+    <div class="focus-mode">
+        <div class="focus-icon">
+            <span class="icon">
+                <svg viewBox="0 0 24 24" class="nav-icon">
+                <circle cx="12" cy="12" r="9" fill="none"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </span>
+        </div>
+
+        <div class="focus-switch" id="focusToggle">
+            <div class="switch-track">
+                <div class="switch-thumb"></div>
+            </div>
+        </div>
+    </div>
+
+  </aside>
+
+  <main class="main-content">
+    <div class="screen-area">
+      Live Desktop Screen - Focus Mode
+    </div>
+  </main>
+
+  <aside class="right-sidebar">
+    
+    <!-- Timer -->
+    <div class="right-panel timer-panel">
+      <h3>Timer</h3>
+      <div class="timer-container-small">
+        <svg class="progress-ring" width="85" height="85">
+          <circle class="progress-bg" cx="42.5" cy="42.5" r="35"/>
+          <circle class="progress-circle" cx="42.5" cy="42.5" r="35"/>
+        </svg>
+        <div class="timer-text" id="timerText">0s</div>
+      </div>
+    </div>
+
+    <!-- Detected Hands -->
+    <div class="right-panel">
+      <h3>Detected Hands</h3>
+      <div class="info-value" id="detectedHands">0</div>
+    </div>
+
+    <!-- Detected Gesture -->
+    <div class="right-panel">
+      <h3>Detected Gesture</h3>
+      <div class="info-value" id="detectedGesture">None</div>
+    </div>
+
+    <!-- Confidence -->
+    <div class="right-panel">
+      <h3>Confidence</h3>
+      <div class="info-value confidence" id="confidence">0%</div>
+    </div>
+
+  </aside>
+
+</div>
+
+<script src="focus-script.js"></script>
+</body>
+</html>

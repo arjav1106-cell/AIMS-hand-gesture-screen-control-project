@@ -17,9 +17,41 @@ themeToggle.addEventListener("click", () => {
     document.body.classList.contains("light") ? "☀" : "🌙";
 });
 
-// Focus
-focusToggle.addEventListener("click", () => {
-  document.body.classList.toggle("focus-active");
+// Focus - Navigate to focus mode with circular transition
+focusToggle.addEventListener("click", (e) => {
+  // Get the position of the toggle switch
+  const rect = focusToggle.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  
+  // Create circular transition overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-main);
+    z-index: 9999;
+    pointer-events: none;
+    clip-path: circle(0% at ${x}px ${y}px);
+    transition: clip-path 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  `;
+  
+  document.body.appendChild(overlay);
+  
+  // Trigger animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.clipPath = `circle(150% at ${x}px ${y}px)`;
+    });
+  });
+  
+  // Navigate after animation
+  setTimeout(() => {
+    window.location.href = '../control screen focus mode/focus.html';
+  }, 800);
 });
 
 // System status blinking

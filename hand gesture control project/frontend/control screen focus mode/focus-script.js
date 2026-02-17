@@ -1,3 +1,11 @@
+// Apply saved theme on load
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  // Update switch icon if it exists on this page
+  const icon = document.querySelector(".switch-icon");
+  if (icon) icon.textContent = "☀";
+}
+
 const themeToggle = document.getElementById("themeToggle");
 const focusToggle = document.getElementById("focusToggle");
 const switchIcon = document.querySelector(".switch-icon");
@@ -8,6 +16,41 @@ themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("light");
   switchIcon.textContent =
     document.body.classList.contains("light") ? "☀" : "🌙";
+  // Save current theme
+  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+});
+
+// Home - Navigate to home page with circular transition
+const homeBtn = document.getElementById("homeBtn");
+homeBtn.addEventListener("click", () => {
+  const rect = homeBtn.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: ${document.body.classList.contains('light') 
+    ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)' 
+    : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
+    z-index: 9999;
+    pointer-events: none;
+    clip-path: circle(0% at ${x}px ${y}px);
+    transition: clip-path 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.clipPath = `circle(150% at ${x}px ${y}px)`;
+    });
+  });
+
+  setTimeout(() => {
+    window.location.href = '../home page/main-index.html';
+  }, 800);
 });
 
 // Focus toggle - Navigate back to main page with circular transition
@@ -25,7 +68,9 @@ focusToggle.addEventListener("click", (e) => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--bg-main);
+    background: ${document.body.classList.contains('light') 
+    ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)' 
+    : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
     z-index: 9999;
     pointer-events: none;
     clip-path: circle(0% at ${x}px ${y}px);

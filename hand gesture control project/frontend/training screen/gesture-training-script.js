@@ -315,6 +315,39 @@ trainAnotherBtn.addEventListener('click', () => {
   goToStep(1);
 });
 
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    switch (currentStep) {
+      case 1:
+        if (!toStep2Btn.disabled) toStep2Btn.click();
+        break;
+      case 2:
+        document.getElementById('toStep3Btn').click();
+        break;
+      case 3:
+        if (!toStep4Btn.disabled) toStep4Btn.click();
+        break;
+      case 4:
+        if (!confirmSaveBtn.disabled) confirmSaveBtn.click();
+        break;
+    }
+  }
+
+  if (e.key === 'Escape') {
+    switch (currentStep) {
+      case 2:
+        document.getElementById('backToStep1Btn').click();
+        break;
+      case 3:
+        document.getElementById('backToStep2Btn').click();
+        break;
+      case 4:
+        document.getElementById('backToStep3Btn').click();
+        break;
+    }
+  }
+});
+
 // ============================================================
 // GESTURE LIST — backend integration note
 // ============================================================

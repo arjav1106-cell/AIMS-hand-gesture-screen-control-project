@@ -84,9 +84,31 @@ const nameInput  = document.getElementById('gestureNameInput');
 const charCount  = document.getElementById('charCount');
 const toStep2Btn = document.getElementById('toStep2Btn');
 
+const nameError = document.createElement('p');
+nameError.style.cssText = 'color:#ef4444; font-size:11px; margin-top:-8px; display:none;';
+nameInput.insertAdjacentElement('afterend', nameError);
+
 nameInput.addEventListener('input', () => {
+  const val = nameInput.value.trim();
   charCount.textContent = nameInput.value.length;
-  toStep2Btn.disabled = nameInput.value.trim().length === 0;
+
+  // Check against stored gesture list
+  const stored = localStorage.getItem('gestureList');
+  const list = stored ? JSON.parse(stored) : [];
+  const isDuplicate = list.some(g => g.name.toLowerCase() === val.toLowerCase());
+
+  if (isDuplicate) {
+    nameInput.style.borderColor = '#ef4444';
+    nameInput.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.15)';
+    nameError.textContent = 'A gesture with this name already exists.';
+    nameError.style.display = 'block';
+    toStep2Btn.disabled = true;
+  } else {
+    nameInput.style.borderColor = '';
+    nameInput.style.boxShadow = '';
+    nameError.style.display = 'none';
+    toStep2Btn.disabled = val.length === 0;
+  }
 });
 
 toStep2Btn.addEventListener('click', () => {
@@ -112,6 +134,8 @@ function resetStep1() {
   const wcName = document.getElementById('wcGestureName');
   wcName.textContent = '';
   wcName.classList.remove('visible');
+  nameInput.style.borderColor = '';
+  nameInput.style.boxShadow = '';
 }
 
 document.getElementById('backToStep1Btn').addEventListener('click', () => {

@@ -50,6 +50,10 @@ themeToggle.addEventListener("click", () => {
 // NAVIGATION WITH CIRCULAR TRANSITION
 // ============================================================
 function navigateWithCircle(element, destination) {
+  const rect = element.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: fixed;
@@ -59,19 +63,15 @@ function navigateWithCircle(element, destination) {
       ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)'
       : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
     z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
+    clip-path: circle(0% at ${x}px ${y}px);
+    transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   `;
   document.body.appendChild(overlay);
 
-  document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1), transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
-  document.body.style.opacity = '0';
-  document.body.style.transform = 'translateY(12px)';
-
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      overlay.style.opacity = '1';
+      overlay.style.clipPath = `circle(150% at ${x}px ${y}px)`;
     });
   });
 
@@ -89,6 +89,8 @@ homeBtn.addEventListener("click", () => {
 controlBtn.addEventListener("click", () => {
   navigateWithCircle(controlBtn, '../control screen/index.html');
 });
+
+// NOTE: addGestureCard listener is attached inside renderGestureList after the card is created
 
 // ============================================================
 // GESTURE DATA & MANAGEMENT
@@ -183,8 +185,7 @@ function buildAddCard() {
     <div class="add-text">Add New Gesture</div>
   `;
 
-  card.addEventListener('click', handleAddGesture);
-
+  // Listener attached in renderGestureList after card is in the DOM
   return card;
 }
 
@@ -195,19 +196,20 @@ function buildAddCard() {
 function renderGestureList(gestures) {
   gestureGrid.innerHTML = '';
 
-  if (!gestures || gestures.length === 0) {
-    gestureCount.textContent = '0';
-    gestureGrid.appendChild(buildAddCard());
-    return;
-  }
-
   gestures.forEach(g => {
     gestureGrid.appendChild(buildGestureCard(g));
   });
 
-  gestureGrid.appendChild(buildAddCard());
+  // Always append the Add card last
+  const addCard = buildAddCard();
+  gestureGrid.appendChild(addCard);
 
-  // Update count
+  // Attach navigation listener now that the card exists in the DOM
+  addCard.addEventListener('click', () => {
+    navigateWithCircle(addCard, '../training screen/gesture-training.html');
+  });
+
+  // Update navbar count
   gestureCount.textContent = gestures.length;
 }
 
@@ -259,27 +261,23 @@ function showDeleteModal(gestureName, gestureImage, cardElement) {
 function deleteGesture(gestureName, cardElement) {
   console.log(`Deleting gesture: ${gestureName}`);
 
-  // Add deleting animation
   cardElement.classList.add('deleting');
 
-  // Wait for animation to complete
   setTimeout(() => {
-    // Remove from DOM
     cardElement.remove();
 
-    // Remove from DEMO_GESTURES array (in production, also call backend API)
     const index = DEMO_GESTURES.findIndex(g => g.name === gestureName);
-    if (index > -1) {
-      DEMO_GESTURES.splice(index, 1);
-    }
+    if (index > -1) DEMO_GESTURES.splice(index, 1);
 
-    // Update count
+    // Persist updated list so training screen stays in sync
+    localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+
     gestureCount.textContent = DEMO_GESTURES.length;
 
     // TODO: Call backend API to delete
     // fetch(`/api/gestures/${gestureName}`, { method: 'DELETE' });
 
-  }, 400); // Match animation duration
+  }, 400);
 }
 
 /**
@@ -290,7 +288,7 @@ function handleAddGesture() {
   
   // TODO: Open modal or navigate to add gesture form
   // For now, just show a console message
-  alert('Add New Gesture functionality - connect to your backend/modal here');
+  window.location.href = '../training screen/gesture-training.html';
 }
 
 // ============================================================
@@ -314,7 +312,25 @@ const DEMO_GESTURES = [
 
 // ============================================================
 // INITIAL RENDER
+// Load from localStorage if available (synced from training screen),
+// otherwise seed with DEMO_GESTURES and persist them.
 // ============================================================
+const stored = localStorage.getItem('gestureList');
+if (stored) {
+  const parsed = JSON.parse(stored);
+  // Merge: add any DEMO entries not already in stored list
+  DEMO_GESTURES.forEach(dg => {
+    if (!parsed.find(g => g.name === dg.name)) parsed.push(dg);
+  });
+  // Keep DEMO_GESTURES in sync so delete works correctly
+  DEMO_GESTURES.length = 0;
+  parsed.forEach(g => DEMO_GESTURES.push(g));
+  localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+} else {
+  // First visit — seed localStorage with the demo list
+  localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+}
+
 renderGestureList(DEMO_GESTURES);
 
 // ============================================================

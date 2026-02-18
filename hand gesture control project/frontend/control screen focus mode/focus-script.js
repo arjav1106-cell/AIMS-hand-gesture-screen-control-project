@@ -98,6 +98,49 @@ setInterval(() => {
   statusDot.classList.toggle("inactive");
 }, 3000);
 
+// ============================================================
+// SLIDING NAVIGATION (for Gesture List)
+// ============================================================
+
+function navigateWithSlide(destination) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: ${document.body.classList.contains('light')
+      ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)'
+      : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  `;
+  document.body.appendChild(overlay);
+
+  document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1), transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
+  document.body.style.opacity = '0';
+  document.body.style.transform = 'translateY(-12px)';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+  });
+
+  setTimeout(() => {
+    window.location.href = destination;
+  }, 550);
+}
+
+const gestureListBtn = document.getElementById("gestureListBtn");
+if (gestureListBtn) {
+  gestureListBtn.addEventListener("click", () => {
+    navigateWithSlide('../gesture list screen/gesture-list.html');
+  });
+}
+
+
 // =========================
 // Timer Functionality
 // =========================

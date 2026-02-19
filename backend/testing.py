@@ -7,8 +7,28 @@ import subprocess
 import time
 import shutil
 from groq import Groq
+import json
+import os
 
 groq_client = Groq(api_key="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")
+
+HISTORY_FILE = "backend/gesture_history.json"
+
+def save_gesture_history(label, gesture_type, fingers, function_cmd):
+    entry = {
+        "gesture": label,
+        "gesture_type": gesture_type,
+        "fingers": fingers,
+        "function": function_cmd
+    }
+    if not os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "w") as f:
+            json.dump([], f)
+    with open(HISTORY_FILE, "r") as f:
+        data = json.load(f)
+    data.append(entry)
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 def llm_to_command(instruction):
     prompt = f"""
@@ -29,7 +49,7 @@ start <app/url>
 explorer
 shutdown
 control
-ms-settings:
+cmd /c start ms-settings:
 cmd /c <command>
 powershell -Command <command>
 
@@ -47,12 +67,16 @@ def is_executable(cmd):
     if cmd=="NOT_EXECUTABLE":
         return False
     exe = cmd.split()[0]
+    if exe.lower()=="ms-settings:":
+        return True
     if shutil.which(exe):
         return True
     builtins=["start","explorer","powershell","cmd","shutdown","control"]
     return exe.lower() in builtins
 
 def execute_command(cmd):
+    if cmd.startswith("ms-settings:"):
+        cmd="cmd /c start "+cmd
     if not is_executable(cmd):
         print("SYSTEM:",cmd,"is not executable")
         return
@@ -69,7 +93,7 @@ class GestureANN(nn.Module):
             nn.ReLU(),
             nn.Linear(64,num_classes)
         )
-    def forward(self,x): 
+    def forward(self,x):
         return self.net(x)
 
 X_data=[];Y_data=[]
@@ -87,7 +111,11 @@ gesture_counter=0
 current_detected=None
 
 typing_label=False
+typing_type=False
+typing_fingers=False
 typed_text=""
+typed_type=""
+typed_fingers=""
 
 mp_hands=mp.solutions.hands
 hands = mp_hands.Hands(
@@ -111,7 +139,7 @@ def normalize_landmarks(lm):
 
 def train_model():
     global model
-    if not label_to_id: 
+    if not label_to_id:
         return
     X=torch.tensor(np.array(X_data),dtype=torch.float32)
     Y=torch.tensor(Y_data,dtype=torch.long)
@@ -192,7 +220,11 @@ while True:
         current_detected=None
 
     if typing_label:
-        display="TYPE: "+typed_text
+        display="GESTURE: "+typed_text
+    if typing_type:
+        display="TYPE: "+typed_type
+    if typing_fingers:
+        display="FINGERS: "+typed_fingers
 
     cv2.putText(frame,display,(20,50),
                 cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,255),2)
@@ -204,9 +236,38 @@ while True:
     if typing_label:
 
         if key==13:
-            label=typed_text.strip()
-            typed_text=""
             typing_label=False
+            typing_type=True
+
+        elif key==8:
+            typed_text=typed_text[:-1]
+
+        elif key!=255:
+            typed_text+=chr(key)
+
+    elif typing_type:
+
+        if key==13:
+            typing_type=False
+            typing_fingers=True
+
+        elif key==8:
+            typed_type=typed_type[:-1]
+
+        elif key!=255:
+            typed_type+=chr(key)
+
+    elif typing_fingers:
+
+        if key==13:
+            label=typed_text.strip()
+            gesture_type=typed_type.strip()
+            fingers=typed_fingers.strip()
+
+            typed_text=""
+            typed_type=""
+            typed_fingers=""
+            typing_fingers=False
 
             if label:
                 if label not in label_to_id:
@@ -217,11 +278,18 @@ while True:
                 recording=True
                 predict_mode=False
 
+                try:
+                    cmd=llm_to_command(label)
+                except:
+                    cmd=""
+
+                save_gesture_history(label,gesture_type,fingers,cmd)
+
         elif key==8:
-            typed_text=typed_text[:-1]
+            typed_fingers=typed_fingers[:-1]
 
         elif key!=255:
-            typed_text+=chr(key)
+            typed_fingers+=chr(key)
 
     else:
 
@@ -244,5 +312,3 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-
-

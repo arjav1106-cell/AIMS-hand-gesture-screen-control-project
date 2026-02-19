@@ -1,3 +1,11 @@
+// Apply saved theme on load
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  // Update switch icon if it exists on this page
+  const icon = document.querySelector(".switch-icon");
+  if (icon) icon.textContent = "☀";
+}
+
 const layout = document.querySelector(".layout");
 const sidebarToggle = document.getElementById("sidebarToggle");
 const themeToggle = document.getElementById("themeToggle");
@@ -6,8 +14,46 @@ const switchIcon = document.querySelector(".switch-icon");
 const statusDot = document.getElementById("statusDot");
 
 // Collapse
+if (localStorage.getItem("sidebarCollapsed") === "true") {
+  layout.classList.add("collapsed");
+}
+
 sidebarToggle.addEventListener("click", () => {
   layout.classList.toggle("collapsed");
+  localStorage.setItem("sidebarCollapsed", layout.classList.contains("collapsed"));
+});
+
+// Home - Navigate to home page with circular transition
+const homeBtn = document.getElementById("homeBtn");
+homeBtn.addEventListener("click", () => {
+  const rect = homeBtn.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: ${document.body.classList.contains('light') 
+    ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)' 
+    : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
+    z-index: 9999;
+    pointer-events: none;
+    clip-path: circle(0% at ${x}px ${y}px);
+    transition: clip-path 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.clipPath = `circle(150% at ${x}px ${y}px)`;
+    });
+  });
+
+  setTimeout(() => {
+    window.location.href = '../home page/main-index.html';
+  }, 800);
 });
 
 // Theme
@@ -15,6 +61,8 @@ themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("light");
   switchIcon.textContent =
     document.body.classList.contains("light") ? "☀" : "🌙";
+  // Save current theme
+  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
 });
 
 // Focus - Navigate to focus mode with circular transition
@@ -32,7 +80,9 @@ focusToggle.addEventListener("click", (e) => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--bg-main);
+    background: ${document.body.classList.contains('light') 
+    ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)' 
+    : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
     z-index: 9999;
     pointer-events: none;
     clip-path: circle(0% at ${x}px ${y}px);
@@ -60,6 +110,47 @@ setInterval(() => {
   statusDot.classList.toggle("inactive");
 }, 3000);
 
+// ============================================================
+// SLIDING NAVIGATION (for Gesture List)
+// ============================================================
+function navigateWithSlide(destination) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: ${document.body.classList.contains('light')
+      ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)'
+      : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  `;
+  document.body.appendChild(overlay);
+
+  document.body.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+  document.body.style.opacity = '0';
+  document.body.style.transform = 'translateY(-12px)';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+  });
+
+  setTimeout(() => {
+    window.location.href = destination;
+  }, 350);
+}
+
+// Gesture List button
+const gestureListBtn = document.getElementById("gestureListBtn");
+if (gestureListBtn) {
+  gestureListBtn.addEventListener("click", () => {
+    navigateWithSlide('../gesture list screen/gesture-list.html'); // Adjust path as needed
+  });
+}
 // =========================
 // Doughnut Timer
 // =========================

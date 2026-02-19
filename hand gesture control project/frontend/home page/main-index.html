@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gesture Control System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="main-style.css" />
+</head>
+<body>
+
+<!-- ============================================================
+     NAVBAR
+============================================================ -->
+<header class="navbar">
+
+  <!-- Left: Brand -->
+  <div class="logo">🖐 Gesture Control System</div>
+
+  <!-- Center: System Status -->
+  <div class="navbar-status">
+
+    <div class="status-item">
+      <span class="status-dot" id="dot-camera"></span>
+      <span class="status-label">Camera</span>
+      <span class="status-value" id="val-camera">Disconnected</span>
+    </div>
+
+    <div class="status-divider"></div>
+
+    <div class="status-item">
+      <span class="status-dot" id="dot-model"></span>
+      <span class="status-label">Model</span>
+      <span class="status-value" id="val-model">Not Loaded</span>
+    </div>
+
+    <div class="status-divider"></div>
+
+    <div class="status-item">
+      <span class="status-dot" id="dot-engine"></span>
+      <span class="status-label">Engine</span>
+      <span class="status-value" id="val-engine">Inactive</span>
+    </div>
+
+  </div>
+
+  <!-- Right: Theme Toggle -->
+  <div class="theme-switch" id="themeToggle">
+    <div class="switch-track">
+      <div class="switch-thumb">
+        <span class="switch-icon">🌙</span>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+<!-- ============================================================
+     LAYOUT
+============================================================ -->
+<div class="layout" id="layout">
+
+  <!-- -------------------------------------------------------
+       LEFT SIDEBAR
+  ------------------------------------------------------- -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Collapse button -->
+    <div class="sidebar-header">
+      <button class="collapse-btn" id="sidebarToggle">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Account -->
+    <button class="nav-btn" id="btn-account">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
+        </svg>
+      </span>
+      <span class="text">Account</span>
+    </button>
+
+    <!-- Edit Gesture List -->
+    <button class="nav-btn" id="gestureListBtn">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <line x1="8" y1="6"  x2="20" y2="6"></line>
+          <line x1="8" y1="12" x2="20" y2="12"></line>
+          <line x1="8" y1="18" x2="20" y2="18"></line>
+          <circle cx="4" cy="6"  r="1.5"></circle>
+          <circle cx="4" cy="12" r="1.5"></circle>
+          <circle cx="4" cy="18" r="1.5"></circle>
+        </svg>
+      </span>
+      <span class="text">Gesture List</span>
+    </button>
+
+    <!-- Settings -->
+    <button class="nav-btn" id="btn-settings">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" class="nav-icon">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M16.9 16.9l2.1 2.1M2 12h3M19 12h3M4.9 19.1l2.1-2.1M16.9 7.1l2.1-2.1"></path>
+        </svg>
+      </span>
+      <span class="text">Settings</span>
+    </button>
+
+  </aside>
+
+  <!-- -------------------------------------------------------
+       MAIN CONTENT — Hero Start Button
+  ------------------------------------------------------- -->
+  <main class="main-content">
+
+    <div class="hero">
+
+      <!-- Animated Start Button -->
+      <div class="start-wrapper" id="startWrapper">
+
+        <!-- Hand images -->
+        <div class="hands-container">
+          <img src="../assets/images/main page images/mainpage_ok_left.png"   class="hand hand-left"  alt="left hand"  />
+          <img src="../assets/images/main page images/mainpage_ok_right.png" class="hand hand-right" alt="right hand" />
+        </div>
+
+        <!-- Play icon in center -->
+        <div class="play-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="6,4 20,12 6,20" fill="currentColor" stroke="none"></polygon>
+          </svg>
+        </div>
+
+      </div>
+
+      <!-- Label below -->
+      <p class="hero-label">Start Gesture Control</p>
+      <p class="hero-sub">Position your hand in front of the camera to begin</p>
+
+    </div>
+
+  </main>
+
+  <!-- -------------------------------------------------------
+       RIGHT SIDEBAR — Gesture List Panel
+  ------------------------------------------------------- -->
+  <aside class="right-sidebar" id="rightSidebar">
+
+    <div class="right-sidebar-header">
+      <svg viewBox="0 0 24 24" class="nav-icon">
+        <line x1="8" y1="6"  x2="20" y2="6"></line>
+        <line x1="8" y1="12" x2="20" y2="12"></line>
+        <line x1="8" y1="18" x2="20" y2="18"></line>
+        <circle cx="4" cy="6"  r="1.5"></circle>
+        <circle cx="4" cy="12" r="1.5"></circle>
+        <circle cx="4" cy="18" r="1.5"></circle>
+      </svg>
+      <span class="right-sidebar-title">Gestures</span>
+    </div>
+
+    <!-- Gesture list renders here -->
+    <div class="gesture-list" id="gestureList"></div>
+
+  </aside>
+
+</div><!-- /.layout -->
+
+<script src="main-script.js"></script>
+</body>
+</html>

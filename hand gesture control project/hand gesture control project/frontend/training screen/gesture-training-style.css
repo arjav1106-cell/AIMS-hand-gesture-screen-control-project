@@ -355,10 +355,8 @@ body.light .summary-card { background: rgba(0,0,0,0.05); }
 }
 body.light .capture-status { background: rgba(0,0,0,0.04); }
 
-.hidden { display: none !important; }
 .c-state { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .c-state.hidden { display: none; }
-.hitting-time-label { font-size: 12px; margin-top: 12px; display: block; opacity: 0.9; }
 
 .idle-icon svg { width: 32px; height: 32px; stroke: var(--accent); fill: none; stroke-width: 1.5; opacity: 0.5; }
 .idle-text { font-size: 12px; opacity: 0.5; }

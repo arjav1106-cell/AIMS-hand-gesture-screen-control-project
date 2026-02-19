@@ -21,13 +21,13 @@ body.light {
 html, body {
   height: 100%;
   margin: 0;
-  overflow: hidden;
+  overflow: hidden; /* Prevents double scrollbars */
 }
 
 body {
   font-family: 'Segoe UI', sans-serif;
   background: var(--bg-main);
-  background-attachment: fixed;
+  background-attachment: fixed; /* Keeps the gradient from moving */
   color: var(--text-color);
   transition: 0.4s ease;
   display: flex;
@@ -38,9 +38,11 @@ body {
 .navbar {
   height: 70px;
   background: var(--bg-navbar);
-  background-color: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* The magic for the blur effect */
+  background-color: rgba(15, 23, 42, 0.8); /* Semi-transparent background */
+  backdrop-filter: blur(12px); /* Blurs the content behind it */
+  -webkit-backdrop-filter: blur(12px); /* Safari support */
+  
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -50,9 +52,10 @@ body {
   left: 0;
   right: 0;
   z-index: 1000;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color); /* Adds a crisp edge */
 }
 
+/* Ensure the light mode version also supports the blur */
 body.light .navbar {
   background-color: rgba(233, 238, 246, 0.8);
 }
@@ -84,37 +87,44 @@ body.light .navbar {
 .inactive { background: #ef4444; }
 .active { background: #22c55e; }
 
-/* Layout - 3 column grid */
+/* Layout */
 .layout {
   display: grid;
-  grid-template-columns: 80px 1fr 125px;
-  flex: 1;
+  grid-template-columns: 240px 1fr;
+  flex: 1; /* Fills the space below the navbar */
   margin-top: 70px;
   height: calc(100vh - 70px);
   transition: 0.4s ease;
 }
 
-/* Left Sidebar - Collapsed Only */
+.layout.collapsed {
+  grid-template-columns: 80px 1fr;
+}
+
+/* Sidebar */
 .sidebar {
   background: var(--bg-panel);
-  padding: 35px 15px 25px 15px;
+  padding: 25px 15px; /* Increased padding */
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px; /* More space between buttons */
   position: fixed;
   top: 70px;
   bottom: 0;
-  width: 80px;
+  width: 240px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow-x: hidden;
-  align-items: center;
-  z-index: 100;
+  overflow-x: hidden; /* Prevents text peeking out when collapsing */
+  align-items: center; /* Centers items horizontally */
+}
+
+.layout.collapsed .sidebar {
+  width: 80px;
 }
 
 .sidebar-header {
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: center; /* Changed from flex-end to center */
   margin-bottom: 10px;
 }
 
@@ -122,7 +132,7 @@ body.light .navbar {
   background: var(--hover-color);
   color: var(--accent);
   border: 1px solid var(--border-color);
-  width: 50px;
+  width: 50px; /* Fixed width for perfect circle/square */
   height: 50px;
   border-radius: 12px;
   cursor: pointer;
@@ -139,25 +149,24 @@ body.light .navbar {
   transform: rotate(90deg);
 }
 
-/* Main Content */
 .main-content {
   grid-column-start: 2;
-  overflow: hidden;
+  overflow-y: auto;
   height: 100%;
-  padding: 20px;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-bottom: 60px; /* Extra padding so the last panel isn't touching the edge */
+  background: transparent; /* Allows the body gradient to show through */
 }
 
 /* Sidebar Buttons */
 .nav-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 14px 0;
-  width: 100%;
+  justify-content: flex-start; /* Keeps icons on left in expanded mode */
+  gap: 15px;
+  padding: 14px;
+  width: 100%; /* Spans sidebar width */
   border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--bg-panel);
@@ -166,12 +175,19 @@ body.light .navbar {
   transition: 0.3s ease;
 }
 
+/* Light mode shadow */
 body.light .nav-btn {
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
+/* Dark mode glow */
 body:not(.light) .nav-btn {
   box-shadow: 0 0 15px rgba(0,245,255,0.15);
+}
+
+.layout.collapsed .nav-btn {
+  justify-content: center;
+  padding: 14px 0;
 }
 
 .nav-btn:hover {
@@ -179,8 +195,10 @@ body:not(.light) .nav-btn {
   transform: translateX(6px);
 }
 
+ 
+/* Icon shadow below icons */
 .icon {
-  width: 24px;
+  width: 24px; /* Fixed width container for icons */
   display: flex;
   justify-content: center;
   flex-shrink: 0;
@@ -195,6 +213,11 @@ body:not(.light) .nav-btn {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 }
 
+.layout.collapsed .text,
+.layout.collapsed .focus-text {
+  display: none;
+}
+
 /* Focus Mode */
 .focus-mode {
   margin-top: auto;
@@ -202,15 +225,14 @@ body:not(.light) .nav-btn {
   padding: 20px 0;
   border-top: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* Horizontal by default */
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; /* Pushes switch to the right */
   gap: 10px;
 }
 
-.focus-icon {
-  display: flex;
-  align-items: center;
+.layout.collapsed .focus-mode {
+  flex-direction: column; /* Stack them when narrow */
   justify-content: center;
 }
 
@@ -224,12 +246,25 @@ body:not(.light) .nav-btn {
   transition: 0.3s ease;
 }
 
+/* Light shadow */
 body.light .switch-track {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+/* Dark glow */
 body:not(.light) .switch-track {
   box-shadow: 0 0 12px rgba(0,245,255,0.2);
+}
+
+.focus-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.layout.collapsed .focus-icon {
+  justify-content: center;
 }
 
 .switch-track:hover {
@@ -246,6 +281,7 @@ body:not(.light) .switch-track {
   border-radius: 50%;
   transition: left 0.3s ease;
   box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -258,104 +294,56 @@ body:not(.light) .switch-track {
   transform: translateY(-1px);
 }
 
-body.light .theme-switch .switch-thumb {
-  left: 33px;
-}
-
+body.light .theme-switch .switch-thumb,
 body.focus-active .focus-switch .switch-thumb {
   left: 33px;
 }
 
-/* Screen Area - Live desktop stream */
+/* Screen */
 .screen-area {
-  width: calc(100% - 40px);
-  height: calc(100% - 60px);
+  margin: 25px 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 80vh;
   background: var(--bg-panel);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  cursor: crosshair;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  margin-bottom: 20px;
 }
-.desktop-stream-img {
+
+/* Bottom Panel Layout */
+.bottom-panel {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: none;
-}
-.desktop-stream-img.active {
-  display: block;
-}
-.desktop-placeholder {
-  color: rgba(255,255,255,0.5);
-  font-size: 14px;
-  text-align: center;
-}
-body.light .desktop-placeholder {
-  color: rgba(0,0,0,0.5);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  margin: 0 0px 40px 0px;
 }
 
-/* Right Sidebar */
-.right-sidebar {
+.panel {
   background: var(--bg-panel);
-  padding: 20px 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  position: fixed;
-  top: 70px;
-  bottom: 0;
-  right: 0;
-  width: 125px;
-  overflow-y: auto;
-  z-index: 100;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 
-.right-panel {
-  background: rgba(0,0,0,0.2);
-  padding: 12px 10px;
+/* Webcam 4:3 */
+.webcam-box {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: black;
   border-radius: 12px;
-  border: 1px solid var(--border-color);
-  text-align: center;
-}
-
-body.light .right-panel {
-  background: rgba(255,255,255,0.5);
-}
-
-.right-panel h3 {
-  font-size: 11px;
-  margin: 0 0 6px 0;
-  opacity: 0.8;
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--accent);
-  margin-top: 6px;
-}
-
-.confidence {
-  font-size: 26px;
-}
-
-/* Timer in Right Sidebar - Smaller */
-.timer-panel {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
-.timer-container-small {
+.timer-container {
   position: relative;
-  width: 85px;
-  height: 85px;
+  width: 180px;
+  height: 180px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -369,7 +357,7 @@ body.light .right-panel {
 .progress-bg {
   fill: none;
   stroke: rgba(255,255,255,0.1);
-  stroke-width: 10;
+  stroke-width: 14;
 }
 
 body.light .progress-bg {
@@ -379,13 +367,15 @@ body.light .progress-bg {
 .progress-circle {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 10;
+  stroke-width: 14;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.3s linear;
 }
 
 .timer-text {
   position: absolute;
-  font-size: 16px;
+  font-size: 26px;
   font-weight: 600;
 }
+
+

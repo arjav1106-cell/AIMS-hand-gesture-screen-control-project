@@ -1,9 +1,4 @@
 // ============================================================
-// API BASE — must be defined first (used by startTrainingCamera)
-// ============================================================
-const API_BASE = (typeof window !== 'undefined' && window.location.origin) ? '' : 'http://localhost:5000';
-
-// ============================================================
 // THEME
 // ============================================================
 const themeToggle = document.getElementById('themeToggle');
@@ -57,41 +52,11 @@ document.getElementById('controlBtn').addEventListener('click', () => navigateWi
 document.getElementById('navGestureListBtn').addEventListener('click', () => navigateWithSlide('../gesture list screen/gesture-list.html'));
 
 // ============================================================
-// CAMERA — Start MediaPipe PREVIEW when Training screen loads
-// ============================================================
-async function startTrainingCamera() {
-  const placeholder = document.getElementById('webcamPlaceholder');
-  const feedImg = document.getElementById('cameraFeedImg');
-  try {
-    const res = await fetch(`${API_BASE}/api/start_training_preview`);
-    const data = await res.json();
-    if (data.ok && feedImg) {
-      feedImg.src = `${API_BASE}/api/video/feed`;
-      feedImg.classList.remove('hidden');
-      if (placeholder) {
-        placeholder.querySelector('.wc-sub').textContent = 'Live camera feed';
-      }
-    }
-  } catch (e) {
-    console.warn('Could not start training camera:', e);
-    if (placeholder) placeholder.querySelector('.wc-sub').textContent = 'Camera unavailable (start server.py)';
-  }
-}
-startTrainingCamera();
-
-// Stop training (release camera) when leaving Training screen
-window.addEventListener('beforeunload', () => {
-  fetch(`${API_BASE}/api/stop_training`, { method: 'GET' }).catch(() => {});
-});
-
-// ============================================================
 // STATE
 // ============================================================
-let gestureName       = '';
-let gestureHittingTime = 3;
-let capturesDone      = false;
-let gestureTotal      = 0;
-let currentStep       = 1;
+let gestureName   = '';
+let capturesDone  = false;
+let gestureTotal  = 0;   // updated from backend after save
 
 // ============================================================
 // STEP MACHINE
@@ -101,7 +66,6 @@ const stepVlines = document.querySelectorAll('.step-vline');
 const stepCards  = document.querySelectorAll('.step-card');
 
 function goToStep(n) {
-  currentStep = n;
   stepCards.forEach(c => c.classList.remove('active'));
   document.getElementById(`step-${n}`).classList.add('active');
 
@@ -120,27 +84,18 @@ const nameInput  = document.getElementById('gestureNameInput');
 const charCount  = document.getElementById('charCount');
 const toStep2Btn = document.getElementById('toStep2Btn');
 
-const hittingTimeInput = document.getElementById('gestureHittingTimeInput');
-
 const nameError = document.createElement('p');
 nameError.style.cssText = 'color:#ef4444; font-size:11px; margin-top:-8px; display:none;';
 nameInput.insertAdjacentElement('afterend', nameError);
 
-async function checkDuplicateName(val) {
-  try {
-    const res = await fetch(`${API_BASE}/api/gestures`);
-    const list = await res.json();
-    return list.some(g => g.name.toLowerCase() === val.toLowerCase());
-  } catch {
-    return false;
-  }
-}
-
-nameInput.addEventListener('input', async () => {
+nameInput.addEventListener('input', () => {
   const val = nameInput.value.trim();
   charCount.textContent = nameInput.value.length;
 
-  const isDuplicate = val ? await checkDuplicateName(val) : false;
+  // Check against stored gesture list
+  const stored = localStorage.getItem('gestureList');
+  const list = stored ? JSON.parse(stored) : [];
+  const isDuplicate = list.some(g => g.name.toLowerCase() === val.toLowerCase());
 
   if (isDuplicate) {
     nameInput.style.borderColor = '#ef4444';
@@ -158,9 +113,9 @@ nameInput.addEventListener('input', async () => {
 
 toStep2Btn.addEventListener('click', () => {
   gestureName = nameInput.value.trim();
-  gestureHittingTime = parseFloat(hittingTimeInput?.value || '3') || 3;
   document.getElementById('gestureNameDisplay').textContent = `"${gestureName}"`;
 
+  // Show gesture name in webcam footer
   const wcName = document.getElementById('wcGestureName');
   wcName.textContent = gestureName;
   wcName.classList.add('visible');
@@ -175,7 +130,6 @@ function resetStep1() {
   nameInput.value = '';
   charCount.textContent = '0';
   gestureName = '';
-  if (hittingTimeInput) hittingTimeInput.value = '3';
   toStep2Btn.disabled = true;
   const wcName = document.getElementById('wcGestureName');
   wcName.textContent = '';
@@ -229,78 +183,40 @@ function resetCaptureState() {
   setState('captureIdle');
 }
 
-// Recording: backend records for RECORD_DURATION. Bar fills to 90% during record,
-// then we call stop -> backend trains & saves -> bar fills to 100%.
-const RECORD_DURATION = 4000;  // ms
-
-async function doStartRecording() {
+// Simulated loading: fills to ~90% in fixed time, then waits for backend "confirmation"
+// Replace simulateBackendConfirmation() with your real backend call.
+startCaptureBtn.addEventListener('click', () => {
   if (capturesDone) return;
   startCaptureBtn.disabled = true;
   setState('captureLoading');
 
-  try {
-    await fetch(`${API_BASE}/api/training/record`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'start',
-        gestureName: gestureName,
-        hittingTime: gestureHittingTime,
-      }),
-    });
-  } catch (e) {
-    console.error('Start recording failed:', e);
-    onCaptureError();
-    return;
-  }
-
+  const FILL_DURATION = 4000;   // ms to reach ~90%
   const startTime = performance.now();
 
   function tick(now) {
     const elapsed = now - startTime;
-    const rawPct = Math.min((elapsed / RECORD_DURATION) * 90, 90);
+    const rawPct = Math.min((elapsed / FILL_DURATION) * 90, 90);
     const pct = Math.round(rawPct);
     loadingBarFill.style.width = pct + '%';
     loadingPct.textContent = pct + '%';
 
-    if (elapsed < RECORD_DURATION) {
+    if (pct < 90) {
       requestAnimationFrame(tick);
     } else {
+      // Filled to 90% — wait for backend
       loadingLabel.textContent = 'Finalising…';
-      doStopRecording();
+      simulateBackendConfirmation();
     }
   }
   requestAnimationFrame(tick);
-}
+});
 
-async function doStopRecording() {
-  try {
-    const res = await fetch(`${API_BASE}/api/training/record`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'stop' }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      onCaptureConfirmed();
-    } else {
-      onCaptureError();
-    }
-  } catch (e) {
-    console.error('Stop recording failed:', e);
-    onCaptureError();
-  }
+function simulateBackendConfirmation() {
+  // TODO: replace with real backend call, then call onCaptureConfirmed() in the callback
+  setTimeout(() => {
+    onCaptureConfirmed();
+  }, 1200);   // simulates backend response delay
 }
-
-function onCaptureError() {
-  setState('captureIdle');
-  startCaptureBtn.disabled = false;
-  loadingBarFill.style.width = '0%';
-  loadingPct.textContent = '0%';
-  loadingLabel.textContent = 'Recording failed. Try again.';
-}
-
-startCaptureBtn.addEventListener('click', doStartRecording);
 
 function onCaptureConfirmed() {
   // Fill remaining bar to 100%
@@ -315,21 +231,16 @@ function onCaptureConfirmed() {
   }, 550);
 }
 
-toStep4Btn.addEventListener('click', async () => {
-  try {
-    const res = await fetch(`${API_BASE}/api/gestures`);
-    const list = await res.json();
-    gestureTotal = list.length;
-  } catch {
-    gestureTotal = 0;
-  }
+toStep4Btn.addEventListener('click', () => {
+  const stored = localStorage.getItem('gestureList');
+  const currentCount = stored ? JSON.parse(stored).length : 0;
+  gestureTotal = currentCount + 1;  // +1 for the gesture being added
 
   document.getElementById('summaryName').textContent  = gestureName;
   document.getElementById('summaryTotal').textContent = gestureTotal;
 
-  // Gesture already saved when recording completed (incl. generated icon).
-  // Gesture List and Home sidebar poll /api/gestures and will show the new gesture with image.
-  setStep4State('saved');
+  // Reset step-4 button states
+  setStep4State('pending');
   goToStep(4);
 });
 
@@ -371,25 +282,40 @@ function setStep4State(state) {
 }
 
 confirmSaveBtn.addEventListener('click', () => {
-  // Gesture is already saved when recording completed. This button does nothing.
+  console.log('[Backend] Save gesture:', gestureName);
+
+  // Add new gesture to the shared localStorage list
+  const stored = localStorage.getItem('gestureList');
+  const list = stored ? JSON.parse(stored) : [];
+  if (!list.find(g => g.name === gestureName)) {
+    list.push({ name: gestureName, image: '' });
+    localStorage.setItem('gestureList', JSON.stringify(list));
+  }
+
+  // Update displayed total
+  document.getElementById('summaryTotal').textContent = list.length;
+
+  // TODO: replace with real API call
+  // fetch('/api/gestures/save', { method:'POST', body: JSON.stringify({ name: gestureName }) })
+
   confirmSaveBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Saved!`;
   confirmSaveBtn.style.background = 'rgba(52,211,153,0.25)';
+
   setStep4State('saved');
 });
 
-deleteNewBtn.addEventListener('click', async () => {
-  try {
-    await fetch(`${API_BASE}/api/gestures/delete-by-name`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: gestureName }),
-    });
-  } catch (e) {
-    console.warn('Delete by name failed, trying delete-latest:', e);
-    try {
-      await fetch(`${API_BASE}/api/gestures/delete-latest`, { method: 'DELETE' });
-    } catch (_) {}
+deleteNewBtn.addEventListener('click', () => {
+  console.log('[Backend] Delete newly recorded gesture:', gestureName);
+
+  // Remove from localStorage list if it was saved
+  const stored = localStorage.getItem('gestureList');
+  if (stored) {
+    const list = JSON.parse(stored).filter(g => g.name !== gestureName);
+    localStorage.setItem('gestureList', JSON.stringify(list));
   }
+
+  // TODO: replace with real API call
+  // fetch('/api/gestures/delete-latest', { method:'DELETE' })
 
   deleteNewBtn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Deleted`;
   deleteNewBtn.style.background = 'rgba(239,68,68,0.2)';
@@ -414,13 +340,6 @@ trainAnotherBtn.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (e) => {
-  // R key: start recording when on step 3
-  if (e.key === 'r' || e.key === 'R') {
-    if (currentStep === 3 && !capturesDone && !startCaptureBtn.disabled) {
-      e.preventDefault();
-      doStartRecording();
-    }
-  }
   if (e.key === 'Enter') {
     switch (currentStep) {
       case 1:

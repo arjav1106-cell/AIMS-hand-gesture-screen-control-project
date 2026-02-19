@@ -1,0 +1,10 @@
+{
+  "label_to_id": {
+    "open Settings": 0,
+    "open google chrome": 1
+  },
+  "id_to_label": {
+    "0": "open Settings",
+    "1": "open google chrome"
+  }
+}

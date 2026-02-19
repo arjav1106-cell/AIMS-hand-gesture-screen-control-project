@@ -127,7 +127,7 @@ function buildGestureCard(gesture) {
   `;
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    showDeleteModal(gesture.name, gesture.image, gesture.id, card);
+    showDeleteModal(gesture.name, gesture.image, card);
   });
 
   header.appendChild(name);
@@ -217,18 +217,18 @@ function renderGestureList(gestures) {
  * Show delete confirmation modal
  * @param {string} gestureName
  * @param {string} gestureImage
- * @param {string} gestureId
  * @param {HTMLElement} cardElement
  */
-function showDeleteModal(gestureName, gestureImage, gestureId, cardElement) {
+function showDeleteModal(gestureName, gestureImage, cardElement) {
   const modal = document.getElementById('deleteModal');
   const modalName = document.getElementById('modalGestureName');
   const modalImage = document.getElementById('modalGestureImage');
   const modalClose = document.getElementById('modalClose');
   const modalConfirm = document.getElementById('modalConfirmBtn');
 
+  // Set gesture info
   modalName.textContent = gestureName;
-  modalImage.src = gestureImage ? GESTURE_IMAGE_PATH + gestureImage : '';
+  modalImage.src = GESTURE_IMAGE_PATH + gestureImage;
   modalImage.alt = gestureName;
 
   // Show modal
@@ -249,30 +249,35 @@ function showDeleteModal(gestureName, gestureImage, gestureId, cardElement) {
   // Confirm delete handler
   modalConfirm.onclick = () => {
     closeModal();
-    deleteGesture(gestureName, gestureId, cardElement);
+    deleteGesture(gestureName, cardElement);
   };
 }
 
 /**
- * Delete a gesture via API and remove from UI
+ * Delete a gesture with animation
  * @param {string} gestureName
- * @param {string} gestureId
  * @param {HTMLElement} cardElement
  */
-async function deleteGesture(gestureName, gestureId, cardElement) {
+function deleteGesture(gestureName, cardElement) {
+  console.log(`Deleting gesture: ${gestureName}`);
+
   cardElement.classList.add('deleting');
 
-  try {
-    const res = await fetch(`${API_BASE}/api/gestures/${gestureId}`, { method: 'DELETE' });
-    if (res.ok) {
-      GESTURES = GESTURES.filter(g => g.id !== gestureId);
-      gestureCount.textContent = GESTURES.length;
-    }
-  } catch (e) {
-    console.warn('Delete failed:', e);
-  }
+  setTimeout(() => {
+    cardElement.remove();
 
-  setTimeout(() => cardElement.remove(), 400);
+    const index = DEMO_GESTURES.findIndex(g => g.name === gestureName);
+    if (index > -1) DEMO_GESTURES.splice(index, 1);
+
+    // Persist updated list so training screen stays in sync
+    localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+
+    gestureCount.textContent = DEMO_GESTURES.length;
+
+    // TODO: Call backend API to delete
+    // fetch(`/api/gestures/${gestureName}`, { method: 'DELETE' });
+
+  }, 400);
 }
 
 /**
@@ -287,22 +292,75 @@ function handleAddGesture() {
 }
 
 // ============================================================
-// API BASE + GESTURE DATA (from backend)
+// DEMO GESTURE DATA
+// In production: fetch from backend API
 // ============================================================
-const API_BASE = (typeof window !== 'undefined' && window.location.origin) ? '' : 'http://localhost:5000';
-let GESTURES = [];
+const DEMO_GESTURES = [
+  { name: "Swipe Left",    image: "gesture_swipe_left.png"   },
+  { name: "Swipe Right",   image: "gesture_swipe_right.png"  },
+  { name: "Swipe Up",      image: "gesture_swipe_up.png"     },
+  { name: "Swipe Down",    image: "gesture_swipe_down.png"   },
+  { name: "Pinch",         image: "gesture_pinch.png"        },
+  { name: "Open Palm",     image: "gesture_open_palm.png"    },
+  { name: "Fist",          image: "gesture_fist.png"         },
+  { name: "Peace Sign",    image: "gesture_peace.png"        },
+  { name: "Thumbs Up",     image: "gesture_thumbs_up.png"    },
+  { name: "Point Up",      image: "gesture_point_up.png"     },
+  { name: "OK Hand",       image: "gesture_ok.png"           },
+  { name: "Wave",          image: "gesture_wave.png"         },
+];
 
+// ============================================================
+// INITIAL RENDER
+// Load from localStorage if available (synced from training screen),
+// otherwise seed with DEMO_GESTURES and persist them.
+// ============================================================
+const stored = localStorage.getItem('gestureList');
+if (stored) {
+  const parsed = JSON.parse(stored);
+  // Merge: add any DEMO entries not already in stored list
+  DEMO_GESTURES.forEach(dg => {
+    if (!parsed.find(g => g.name === dg.name)) parsed.push(dg);
+  });
+  // Keep DEMO_GESTURES in sync so delete works correctly
+  DEMO_GESTURES.length = 0;
+  parsed.forEach(g => DEMO_GESTURES.push(g));
+  localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+} else {
+  // First visit — seed localStorage with the demo list
+  localStorage.setItem('gestureList', JSON.stringify(DEMO_GESTURES));
+}
+
+renderGestureList(DEMO_GESTURES);
+
+// ============================================================
+// BACKEND INTEGRATION (COMMENTED OUT)
+// Uncomment and customize when backend is ready
+// ============================================================
+
+/*
+// Fetch gestures from backend on page load
 async function loadGestures() {
   try {
-    const res = await fetch(`${API_BASE}/api/gestures`);
-    const data = await res.json();
-    GESTURES = (data || []).map(g => ({ id: g.id, name: g.name, image: g.image || '' }));
-    renderGestureList(GESTURES);
-  } catch (e) {
-    GESTURES = [];
-    renderGestureList([]);
+    const response = await fetch('/api/gestures');
+    const gestures = await response.json();
+    renderGestureList(gestures);
+  } catch (error) {
+    console.error('Failed to load gestures:', error);
   }
 }
 
+// Poll for updates every 5 seconds
+setInterval(async () => {
+  try {
+    const response = await fetch('/api/gestures');
+    const gestures = await response.json();
+    renderGestureList(gestures);
+  } catch (error) {
+    console.warn('Failed to refresh gestures:', error);
+  }
+}, 5000);
+
+// Call on load
 loadGestures();
-setInterval(loadGestures, 3000);
+*/

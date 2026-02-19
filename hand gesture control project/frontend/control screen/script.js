@@ -1,7 +1,9 @@
+// API base
+const API_BASE = (typeof window !== 'undefined' && window.location.origin) ? '' : 'http://localhost:5000';
+
 // Apply saved theme on load
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
-  // Update switch icon if it exists on this page
   const icon = document.querySelector(".switch-icon");
   if (icon) icon.textContent = "☀";
 }
@@ -65,43 +67,23 @@ themeToggle.addEventListener("click", () => {
   localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
 });
 
-// Focus - Navigate to focus mode with circular transition
-focusToggle.addEventListener("click", (e) => {
-  // Get the position of the toggle switch
-  const rect = focusToggle.getBoundingClientRect();
-  const x = rect.left + rect.width / 2;
-  const y = rect.top + rect.height / 2;
-  
-  // Create circular transition overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: ${document.body.classList.contains('light') 
-    ? 'linear-gradient(180deg, #e6ecf5 0%, #dde5f0 100%)' 
-    : 'radial-gradient(circle at 30% 20%, #16213e 0%, #0a0f1f 40%, #050814 100%)'};
-    z-index: 9999;
-    pointer-events: none;
-    clip-path: circle(0% at ${x}px ${y}px);
-    transition: clip-path 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  `;
-  
-  document.body.appendChild(overlay);
-  
-  // Trigger animation
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      overlay.style.clipPath = `circle(150% at ${x}px ${y}px)`;
-    });
-  });
-  
-  // Navigate after animation
-  setTimeout(() => {
-    window.location.href = '../control screen focus mode/focus.html';
-  }, 800);
+// Focus Mode Toggle - Launch desktop overlay Layer window
+focusToggle.addEventListener("click", async (e) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/focus-layer/launch`);
+    const data = await res.json();
+    if (data.ok) {
+      console.log("Focus Layer launched");
+      // Visual feedback: toggle switch animation
+      focusToggle.classList.add("active");
+      setTimeout(() => focusToggle.classList.remove("active"), 300);
+    } else {
+      alert(`Failed to launch Focus Layer: ${data.error || "Unknown error"}\n\nMake sure to install:\ncd focus-layer && npm install`);
+    }
+  } catch (err) {
+    console.error("Focus Layer launch error:", err);
+    alert("Failed to launch Focus Layer. Check console for details.");
+  }
 });
 
 // System status blinking
@@ -152,41 +134,152 @@ if (gestureListBtn) {
   });
 }
 // =========================
-// Doughnut Timer
+// Control Screen: Start recognition, MediaPipe feed, Timer, Gesture
 // =========================
 
+const feedImg = document.getElementById("mediaPipeFeedImg");
+const feedPlaceholder = document.getElementById("feedPlaceholder");
+const handStatusText = document.getElementById("handStatusText");
+const detectedGestureEl = document.getElementById("detectedGestureEl");
+const confidenceEl = document.getElementById("confidenceEl");
 const circle = document.querySelector(".progress-circle");
 const timerText = document.getElementById("timerText");
 
 const radius = 70;
 const circumference = 2 * Math.PI * radius;
-
 circle.style.strokeDasharray = circumference;
 circle.style.strokeDashoffset = circumference;
 
-// This duration should come from backend later
-// For now simulate 10 seconds
-let totalDuration = 10; // seconds (backend will set this)
-let elapsed = 0;
+let timerInterval = null;
 
-function startTimer(duration) {
-  totalDuration = duration;
-  elapsed = 0;
+// Desktop stream elements
+const desktopPanel = document.getElementById("desktopPanel");
+const desktopFeedImg = document.getElementById("desktopFeedImg");
+const desktopPlaceholder = document.getElementById("desktopPlaceholder");
 
-  const interval = setInterval(() => {
-    elapsed++;
-
-    const progress = elapsed / totalDuration;
-    const offset = circumference - progress * circumference;
-    circle.style.strokeDashoffset = offset;
-
-    timerText.textContent = `${elapsed}s`;
-
-    if (elapsed >= totalDuration) {
-      clearInterval(interval);
+// Start recognition + desktop stream
+async function startControl() {
+  try {
+    await fetch(`${API_BASE}/api/desktop/start`);
+    await fetch(`${API_BASE}/api/recognition/start?focus=0`);
+    if (feedImg) {
+      feedImg.src = `${API_BASE}/api/video/feed`;
+      feedImg.style.display = "block";
+      if (feedPlaceholder) { feedPlaceholder.style.display = "none"; feedPlaceholder.textContent = ""; }
     }
-  }, 1000);
+    if (desktopFeedImg) {
+      desktopFeedImg.src = `${API_BASE}/api/desktop/feed`;
+      desktopFeedImg.classList.add("active");
+      if (desktopPlaceholder) desktopPlaceholder.style.display = "none";
+    }
+  } catch (e) {
+    if (feedPlaceholder) feedPlaceholder.textContent = "Start server.py";
+    if (desktopPlaceholder) desktopPlaceholder.textContent = "Start server.py";
+  }
 }
 
-// Example start (remove later when backend controls it)
-startTimer(10);
+// Stop MediaPipe, camera, and desktop stream
+async function stopControl() {
+  try {
+    await fetch(`${API_BASE}/api/desktop/stop`);
+    await fetch(`${API_BASE}/api/stop_all`);
+    if (feedImg) { feedImg.src = ""; feedImg.style.display = "none"; }
+    if (feedPlaceholder) { feedPlaceholder.style.display = ""; feedPlaceholder.textContent = "Stopped"; }
+    if (desktopFeedImg) { desktopFeedImg.src = ""; desktopFeedImg.classList.remove("active"); }
+    if (desktopPlaceholder) { desktopPlaceholder.style.display = ""; desktopPlaceholder.textContent = "Click Start to view live desktop"; }
+    if (handStatusText) handStatusText.textContent = "No Hand Detected";
+    if (detectedGestureEl) detectedGestureEl.textContent = "None";
+    if (confidenceEl) confidenceEl.textContent = "Confidence: 0%";
+  } catch (e) {
+    console.warn("Stop failed:", e);
+  }
+}
+
+// Desktop input: map click to normalized 0-1 and send to backend
+function setupDesktopInput() {
+  if (!desktopPanel || !desktopFeedImg) return;
+  desktopPanel.addEventListener("click", (e) => {
+    desktopPanel.focus();  // Ensure panel has focus for keyboard
+    if (!desktopFeedImg.classList.contains("active")) return;
+    const rect = desktopFeedImg.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+      fetch(`${API_BASE}/api/desktop/mouse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ x, y, button: "left", action: "click" }),
+      }).catch(() => {});
+    }
+  });
+  desktopPanel.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (!desktopFeedImg.classList.contains("active")) return;
+    const rect = desktopFeedImg.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    if (x >= 0 && x <= 1 && y >= 0 && y <= 1) {
+      fetch(`${API_BASE}/api/desktop/mouse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ x, y, button: "right", action: "click" }),
+      }).catch(() => {});
+    }
+  });
+  desktopPanel.addEventListener("keydown", (e) => {
+    if (!desktopFeedImg.classList.contains("active")) return;
+    e.preventDefault();
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const keyMap = { "Enter": "enter", " ": "space", "Backspace": "backspace", "Tab": "tab", "Escape": "escape", "ArrowUp": "up", "ArrowDown": "down", "ArrowLeft": "left", "ArrowRight": "right" };
+    const k = keyMap[key] || key;
+    fetch(`${API_BASE}/api/desktop/keyboard`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: k, action: "press" }),
+    }).catch(() => {});
+  });
+}
+setupDesktopInput();
+
+document.getElementById("startControlBtn")?.addEventListener("click", startControl);
+document.getElementById("stopControlBtn")?.addEventListener("click", stopControl);
+
+startControl();
+
+// SSE for predictions, timer, hand status
+let eventSource = null;
+function connectSSE() {
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource(`${API_BASE}/api/events`);
+  eventSource.onmessage = (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.type === "prediction") {
+        if (detectedGestureEl) detectedGestureEl.textContent = d.gesture || "None";
+        if (confidenceEl) confidenceEl.textContent = `Confidence: ${d.confidence || 0}%`;
+        updateTimer(d.hittingTime, d.timerElapsed);
+      } else if (d.type === "heartbeat") {
+        pollStatus();
+      }
+    } catch (_) {}
+  };
+}
+connectSSE();
+
+async function pollStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/api/status`);
+    const d = await res.json();
+    if (handStatusText) handStatusText.textContent = d.handDetected ? "Hand Detected" : "No Hand Detected";
+  } catch (_) {}
+}
+setInterval(pollStatus, 500);
+
+function updateTimer(hittingTime, timerElapsed) {
+  if (!hittingTime || hittingTime <= 0) hittingTime = 3;
+  const elapsed = timerElapsed || 0;
+  const progress = Math.min(elapsed / hittingTime, 1);
+  const offset = circumference - progress * circumference;
+  circle.style.strokeDashoffset = offset;
+  timerText.textContent = `${Math.round(elapsed)}s`;
+}

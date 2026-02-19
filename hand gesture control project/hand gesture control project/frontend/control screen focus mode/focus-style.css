@@ -266,7 +266,7 @@ body.focus-active .focus-switch .switch-thumb {
   left: 33px;
 }
 
-/* Screen Area - Live desktop stream */
+/* Screen Area - Maximized */
 .screen-area {
   width: calc(100% - 40px);
   height: calc(100% - 60px);
@@ -275,28 +275,9 @@ body.focus-active .focus-switch .switch-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  cursor: crosshair;
+  font-size: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   margin-bottom: 20px;
-}
-.desktop-stream-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: none;
-}
-.desktop-stream-img.active {
-  display: block;
-}
-.desktop-placeholder {
-  color: rgba(255,255,255,0.5);
-  font-size: 14px;
-  text-align: center;
-}
-body.light .desktop-placeholder {
-  color: rgba(0,0,0,0.5);
 }
 
 /* Right Sidebar */

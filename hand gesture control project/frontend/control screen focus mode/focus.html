@@ -44,7 +44,7 @@
       </span>
     </button>
 
-    <button class="nav-btn">
+    <button class="nav-btn" id="startControlBtn">
       <span class="icon">
         <svg viewBox="0 0 24 24" class="nav-icon">
           <polygon points="8,5 19,12 8,19"></polygon>
@@ -52,7 +52,7 @@
       </span>
     </button>
 
-    <button class="nav-btn">
+    <button class="nav-btn" id="stopControlBtn">
       <span class="icon">
         <svg viewBox="0 0 24 24" class="nav-icon">
           <rect x="6" y="6" width="12" height="12"></rect>
@@ -103,8 +103,9 @@
   </aside>
 
   <main class="main-content">
-    <div class="screen-area">
-      Live Desktop Screen - Focus Mode
+    <div class="screen-area" id="desktopPanel" tabindex="0">
+      <img id="desktopFeedImg" src="" alt="Live desktop" class="desktop-stream-img"/>
+      <div class="desktop-placeholder" id="desktopPlaceholder">Click Start to view live desktop</div>
     </div>
   </main>
 
@@ -125,7 +126,7 @@
     <!-- Detected Hands -->
     <div class="right-panel">
       <h3>Detected Hands</h3>
-      <div class="info-value" id="detectedHands">0</div>
+      <div class="info-value" id="detectedHands">No</div>
     </div>
 
     <!-- Detected Gesture -->

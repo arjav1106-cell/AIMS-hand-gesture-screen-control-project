@@ -177,23 +177,36 @@ function renderGestureList(gestures) {
   });
 }
 
-// API base (empty when served from same origin)
-const API_BASE = (typeof window !== 'undefined' && window.location.origin) ? '' : 'http://localhost:5000';
+// ---- Demo gesture data (replace with backend fetch) ----
+// In production: fetch("/api/gestures").then(r => r.json()).then(renderGestureList)
+const DEMO_GESTURES = [
+  { name: "Swipe Left",    image: "swipe_left.png"   },
+  { name: "Swipe Right",   image: "swipe_right.png"  },
+  { name: "Swipe Up",      image: "swipe_up.png"     },
+  { name: "Swipe Down",    image: "swipe_down.png"   },
+  { name: "Pinch",         image: "pinch.png"        },
+  { name: "Open Palm",     image: "open_palm.png"    },
+  { name: "Fist",          image: "fist.png"         },
+  { name: "Peace Sign",    image: "peace.png"        },
+  { name: "Thumbs Up",     image: "thumbs_up.png"    },
+  { name: "Point Up",      image: "point_up.png"     },
+];
 
-// Fetch gestures from backend and render. Poll every 3s for sync.
-async function fetchAndRenderGestures() {
-  try {
-    const res = await fetch(`${API_BASE}/api/gestures`);
-    const data = await res.json();
-    const mapped = (data || []).map(g => ({ name: g.name, image: g.image || '' }));
-    renderGestureList(mapped);
-  } catch (err) {
-    renderGestureList([]);
-  }
-}
+// Initial render
+renderGestureList(DEMO_GESTURES);
 
-fetchAndRenderGestures();
-setInterval(fetchAndRenderGestures, 3000);
+// ---- Polling: re-fetch from backend every 5 seconds ----
+// Uncomment when backend is ready:
+//
+// setInterval(async () => {
+//   try {
+//     const res  = await fetch("/api/gestures");
+//     const data = await res.json();
+//     renderGestureList(data);
+//   } catch (err) {
+//     console.warn("Could not refresh gesture list:", err);
+//   }
+// }, 5000);
 
 
 // ============================================================
@@ -204,13 +217,8 @@ setInterval(fetchAndRenderGestures, 3000);
 
 const startWrapper = document.getElementById("startWrapper");
 
-startWrapper.addEventListener("click", async () => {
-  // Start recognition on backend before navigating to Control screen
-  try {
-    await fetch(`${API_BASE || ''}/api/recognition/start?focus=0`);
-  } catch (e) {
-    console.warn("Could not start recognition:", e);
-  }
+startWrapper.addEventListener("click", () => {
+  console.log("Start Gesture Control clicked — connect backend here.");
 
   // Get center position of the start button
   const rect = startWrapper.getBoundingClientRect();

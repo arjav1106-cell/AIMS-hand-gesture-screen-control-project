@@ -299,7 +299,17 @@ body.focus-active .focus-switch .switch-thumb {
   left: 33px;
 }
 
-/* Screen */
+/* Focus toggle active state (when Layer is launching) */
+.focus-switch.active .switch-thumb {
+  animation: pulse-focus 0.3s ease;
+}
+
+@keyframes pulse-focus {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Screen - live desktop stream */
 .screen-area {
   margin: 25px 0;
   width: 100%;
@@ -310,6 +320,26 @@ body.focus-active .focus-switch .switch-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.desktop-stream-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+}
+.desktop-stream-img.active {
+  display: block;
+}
+.desktop-placeholder {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  text-align: center;
+}
+body.light .desktop-placeholder {
+  color: rgba(0,0,0,0.5);
 }
 
 /* Bottom Panel Layout */

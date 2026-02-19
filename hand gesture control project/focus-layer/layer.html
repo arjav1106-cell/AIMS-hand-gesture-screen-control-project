@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Layer</title>
+  <link rel="stylesheet" href="layer-style.css">
+</head>
+<body>
+
+  <!-- Small Top Bar: Draggable area with single Stop button + Close -->
+  <div class="top-bar" id="topBar">
+    <div class="top-bar-title">Focus Layer</div>
+    <button class="stop-btn" id="stopAllBtn">
+      <svg viewBox="0 0 24 24" class="btn-icon"><rect x="6" y="6" width="12" height="12"/></svg>
+      Stop
+    </button>
+    <button class="close-btn" id="closeBtn" title="Close Layer">
+      <svg viewBox="0 0 24 24" class="btn-icon"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- Right Sidebar: Same as Control Screen -->
+  <aside class="right-sidebar">
+    
+    <!-- Timer -->
+    <div class="right-panel timer-panel">
+      <h3>Timer</h3>
+      <div class="timer-container-small">
+        <svg class="progress-ring" width="85" height="85">
+          <circle class="progress-bg" cx="42.5" cy="42.5" r="35"/>
+          <circle class="progress-circle" cx="42.5" cy="42.5" r="35"/>
+        </svg>
+        <div class="timer-text" id="timerText">0s</div>
+      </div>
+    </div>
+
+    <!-- Detected Hands -->
+    <div class="right-panel">
+      <h3>Detected Hands</h3>
+      <div class="info-value" id="detectedHands">No</div>
+    </div>
+
+    <!-- Detected Gesture -->
+    <div class="right-panel">
+      <h3>Detected Gesture</h3>
+      <div class="info-value" id="detectedGesture">None</div>
+    </div>
+
+    <!-- Confidence -->
+    <div class="right-panel">
+      <h3>Confidence</h3>
+      <div class="info-value confidence" id="confidence">0%</div>
+    </div>
+
+    <!-- Gesture List -->
+    <div class="right-panel gesture-list-panel">
+      <h3>Gestures</h3>
+      <div class="gesture-list" id="gestureList"></div>
+    </div>
+
+  </aside>
+
+  <script src="layer-script.js"></script>
+</body>
+</html>

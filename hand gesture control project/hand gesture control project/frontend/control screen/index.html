@@ -49,7 +49,7 @@
       <span class="text">Home</span>
     </button>
 
-    <button class="nav-btn" id="startControlBtn">
+    <button class="nav-btn">
       <span class="icon">
         <svg viewBox="0 0 24 24" class="nav-icon">
           <polygon points="8,5 19,12 8,19"></polygon>
@@ -58,7 +58,7 @@
       <span class="text">Start Control</span>
     </button>
 
-    <button class="nav-btn" id="stopControlBtn">
+    <button class="nav-btn">
       <span class="icon">
         <svg viewBox="0 0 24 24" class="nav-icon">
           <rect x="6" y="6" width="12" height="12"></rect>
@@ -114,22 +114,17 @@
 
   <main class="main-content">
 
-    <!-- Live desktop stream: click/type to interact with PC -->
-    <div class="screen-area" id="desktopPanel" tabindex="0">
-      <img id="desktopFeedImg" src="" alt="Live desktop" class="desktop-stream-img"/>
-      <div class="desktop-placeholder" id="desktopPlaceholder">Click Start to view live desktop</div>
+    <div class="screen-area">
+      Live Desktop Screen
     </div>
 
     <!-- RESTORED LOWER PANEL -->
     <div class="bottom-panel">
 
     <div class="panel">
-        <h3>MediaPipe Feed</h3>
-        <div class="webcam-box" id="mediaPipeFeedBox">
-            <img id="mediaPipeFeedImg" src="" alt="MediaPipe feed" style="width:100%;height:100%;object-fit:contain;display:none;"/>
-            <span class="webcam-placeholder" id="feedPlaceholder">Starting…</span>
-        </div>
-        <p id="handStatusText">No Hand Detected</p>
+        <h3>Webcam Preview</h3>
+        <div class="webcam-box">MediaPipe Feed</div>
+        <p>No Hand Detected</p>
     </div>
 
     <div class="panel">
@@ -157,8 +152,8 @@
 
     <div class="panel">
         <h3>Detected Gesture</h3>
-        <h2 id="detectedGestureEl">None</h2>
-        <p id="confidenceEl">Confidence: 0%</p>
+        <h2>None</h2>
+        <p>Confidence: 0%</p>
         <!-- <select>
         <option>View Gesture List</option>
         </select> -->

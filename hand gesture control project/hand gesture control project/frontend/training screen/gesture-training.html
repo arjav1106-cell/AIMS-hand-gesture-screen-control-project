@@ -81,8 +81,6 @@
         <p class="card-desc">Give this gesture a clear, recognisable name so you can identify it later.</p>
         <input type="text" class="name-input" id="gestureNameInput" placeholder="e.g. Swipe Left, Thumbs Up…" maxlength="32"/>
         <div class="char-count"><span id="charCount">0</span>/32</div>
-        <label class="hitting-time-label" for="gestureHittingTimeInput">Gesture Hitting Time (seconds)</label>
-        <input type="number" class="name-input" id="gestureHittingTimeInput" placeholder="3" min="1" max="30" value="3" step="0.5"/>
         <button class="btn-primary full-w" id="toStep2Btn" disabled>
           Continue
           <svg viewBox="0 0 24 24" class="btn-arrow"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -197,12 +195,11 @@
     </div>
     <div class="webcam-feed">
       <div class="webcam-feed-inner">
-        <div class="webcam-placeholder" id="webcamPlaceholder">
+        <div class="webcam-placeholder">
           <svg viewBox="0 0 24 24" class="webcam-icon"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <p class="wc-label">Camera feed</p>
-          <p class="wc-sub">Starting camera…</p>
+          <p class="wc-sub">Backend renders the live feed here</p>
         </div>
-        <img id="cameraFeedImg" class="camera-feed-img hidden" alt="Live camera feed" style="width:100%;height:100%;object-fit:contain;"/>
         <div class="hand-guide"><div class="guide-box"></div></div>
       </div>
     </div>

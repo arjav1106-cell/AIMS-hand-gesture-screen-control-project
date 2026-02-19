@@ -1,0 +1,20 @@
+[
+  {
+    "gesture": "close google chrome",
+    "gesture_type": "close google chrome",
+    "fingers": "index finger",
+    "function": "taskkill /im chrome.exe"
+  },
+  {
+    "gesture": "open reddit",
+    "gesture_type": "close reddit",
+    "fingers": "middle and index finger",
+    "function": "start https://www.reddit.com"
+  },
+  {
+    "gesture": "open settings",
+    "gesture_type": "open settings",
+    "fingers": "three",
+    "function": "cmd /c start ms-settings:"
+  }
+]
